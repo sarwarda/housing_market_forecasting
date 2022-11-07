@@ -20,7 +20,7 @@ The contents of this project are as follows:
     - **Modeling and Forecasting**: So far, this folder contains a python file with relevant functions and a notebook for forecasting modeling. In the future, the python file will be useful for linear regression or other correlation analysis. 
 - ***MySQL_***: This folder contains the sql files needed to generate the initial database and run basic queries and the raw Redfin housing market data.
     - **sql files**: there are three sql files; one for generating tables, one for inserting data, and one for general queries. The general queries are stored in a new table within the database.
-    - **Raw Redfin data**: raw excel files taken from the Redfin database.
+    - **Raw Redfin data**: You can find the data via the dropbox link.
 
 <br>
 
