@@ -6,9 +6,6 @@ import random
 import pandas as pd
 from pprint import pprint
 
-# we're not currently using this because the LaTeX
-# experience is so awful (it doesn't use HTML but
-# the plaintext representation).
 from IPython.display import HTML, display_html
 from tabulate import tabulate
 
@@ -23,8 +20,7 @@ def summarize(formula, X, y, model, style='linear'):
     result["formula"] = formula
     result["n"] = len(y)
     result["model"] = model
-    # I think this is a bug in Scikit Learn 
-    # because lasso should work with multiple targets.
+
     if style == "lasso":
         result["coefficients"] = model.coef_
     else:
