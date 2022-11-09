@@ -17,26 +17,45 @@ ALGORITHMS = {
 
 def summarize(formula, X, y, model, style='linear'):
     result = {}
-    result["formula"] = formula
     result["n"] = len(y)
+    result["formula"] = formula
     result["model"] = model
 
     if style == "lasso":
         result["coefficients"] = model.coef_
     else:
         result["coefficients"] =  model.coef_[0]
-    result["r_squared"] = model.score( X, y)
-    y_hat = model.predict(X)
-    result["residuals"] = y - y_hat
-    result["y_hat"] = y_hat
-    result["y"]  = y
-    sum_squared_error = sum([e**2 for e in result[ "residuals"]])[0]
+        
+    if style == 'logistic':
+        y_hat = model.predict( X)
+        result[ "residuals"] = y - y_hat
+        result["y_hat"] = y_hat 
+        result["y"] = y
+        
+        # efron's pseudo R^2
+        y_bar = np.mean(y)
+        pr = model.predict_proba(X).transpose()[1]
+        result["probabilities"] = pr
+        efrons_numerator = np.sum((y - pr)**2) 
+        efrons_denominator = np.sum((y-y_bar)**2)
+        result["r_squared"] = 1 - (efrons_numerator/efrons_denominator)
+        
+        # error rate
+        result["sigma"] = np.sum(np.abs(result["residuals"]))/result["n"]*100
+        return result
+    else:
+        result["r_squared"] = model.score( X, y)
+        y_hat = model.predict(X)
+        result["residuals"] = y - y_hat
+        result["y_hat"] = y_hat
+        result["y"]  = y
+        sum_squared_error = sum([e**2 for e in result[ "residuals"]])[0]
 
-    n = len(result["residuals"])
-    k = len(result["coefficients"])
-    
-    result["sigma"] = np.sqrt( sum_squared_error / (n - k))
-    return result
+        n = len(result["residuals"])
+        k = len(result["coefficients"])
+
+        result["sigma"] = np.sqrt( sum_squared_error / (n - k))
+        return result
 
 def linear_regression(formula, data=None, style="linear", params={}):
     if data is None:
@@ -65,7 +84,7 @@ def logistic_regression( formula, data=None):
     result[ "n"] = data.shape[ 0]
 
     y, X = patsy.dmatrices( formula, data, return_type="matrix")
-    y = np.ravel( y) # not sure why this is needed for LogisticRegression but not LinearRegression
+    y = np.ravel( y) 
 
     model = linear.LogisticRegression( fit_intercept=False).fit( X, y)
     result["model"] = model
@@ -178,6 +197,8 @@ def bootstrap_logistic_regression( formula, data=None, samples=100):
     bootstrap_results[ "sigma"] = result[ "sigma"]
     bootstrap_results[ "r_squared"] = result[ "r_squared"]
     bootstrap_results["model"] = result["model"]
+    bootstrap_results["y"] = result["y"]
+    bootstrap_results["y_hat"] = result["y_hat"]
     return bootstrap_results
 
 def fmt(n, sd=2):
@@ -351,13 +372,3 @@ def evaluate_coefficient_predictions(predictions, result):
 def adjusted_r_squared(result):
     adjustment = (result["n"] - 1)/(result["n"] - len(result["coefficients"]) - 1 - 1)
     return 1 - (1 - result["r_squared"]) * adjustment
-
-def correlations(data, y, xs):
-    rs = []
-    rhos = []
-    for x in xs:
-        r = stats.pearsonr(data[y], data[x])[0]
-        rs.append(r)
-        rho = stats.spearmanr(data[y], data[x])[0]
-        rhos.append(rho)
-    return pd.DataFrame({"feature": xs, "r": rs, "rho": rhos})
